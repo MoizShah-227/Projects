@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+.landing-page{
+    width: 100%;
+    height: 100vh;
+    background-image: linear-gradient(to bottom right, rgba(4, 136, 83, 1) 0%, rgba(0, 0, 0, 0.84) 100%);
+    font-family: "Poppins", sans-serif;
+
+}
+.landing-page .nav-bar{
+    padding-top: 20px;
+    margin: auto;
+    width: 90%;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.landing-page .nav-bar .logo{
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.landing-page .nav-bar .logo h3{
+    color: aliceblue;
+    margin-top: 8px;
+    padding-left: 10px;
+}
+.landing-page .nav-bar .login-btn{
+    width: 110px;
+    height: 40px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 0%;
+    border: transparent;
+    color: rgba(4, 136, 83, 1);
+}
+.landing-page .row {
+    margin-top: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.landing-page .contain-hero{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.landing-page .row img{
+    width: 80%;
+    margin-left: 90px;
+}
+.landing-page .row h1{
+    color: aliceblue;
+    font-size: 42px;
+}
+.landing-page .row p{
+    color: aliceblue;
+    font-size: 15px;
+}
+.landing-page .row .voting-btn{
+    margin-top: 10px;
+    width: 150px;
+    height: 50px;
+    font-size: 22px;
+    font-weight: 600;
+    color: rgba(4, 136, 83, 1);
+    border-radius: 0%;
+    transition: 0.2s;
+}
+
+.landing-page .nav-bar .login-btn:hover{
+    color: aliceblue;
+    background-color: rgba(4, 136, 83, 1);
+}
+.landing-page .row .voting-btn:hover{
+    background-color: rgba(4, 136, 83, 1);
+    color: aliceblue;
+}
