@@ -9,7 +9,7 @@
       {
         "internalType": "string",
         "name": "cnic",
-        "type": "string"
+        "type": "string"  
       }
     ],
     "name": "vote",

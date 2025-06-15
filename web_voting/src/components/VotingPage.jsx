@@ -32,26 +32,31 @@ const VotingPage = () => {
     }
   }, []);
 
-  const handleVoteClick = async () => {
-    if (!selected) return alert('Please select a candidate.');
+const handleVoteClick = async () => {
+  if (!selected) return alert('Please select a candidate.');
 
-    try {
-      if (window.ethereum) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send('eth_requestAccounts', []);
-        const signer = provider.getSigner();
-        const address = await signer.getAddress();
-        setWalletAddress(address); // ✅ Save to state
-        setShowModal(true); // ✅ Show modal after wallet connected
-        console.log("Wallet address:", address);
-      } else {
-        alert('Please install MetaMask!');
-      }
-    } catch (error) {
-      console.error('MetaMask connection error:', error);
-      alert('Failed to connect wallet.');
+  try {
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+
+      setWalletAddress(address); // ✅ Set wallet address
+
+      // ✅ Wait for state to update before showing modal
+      setTimeout(() => {
+        setShowModal(true);
+      }, 100); // small delay to ensure state updates
+    } else {
+      alert('Please install MetaMask!');
     }
-  };
+  } catch (error) {
+    console.error('MetaMask connection error:', error);
+    alert('Failed to connect wallet.');
+  }
+};
+
 
   const confirmVote = async () => {
     try {
