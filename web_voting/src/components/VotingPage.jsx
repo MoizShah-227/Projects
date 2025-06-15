@@ -6,8 +6,8 @@ import candidate1 from '../img/logo 1.png';
 import candidate2 from '../img/logo 1.png';
 import candidate3 from '../img/logo 1.png';
 import { useNavigate } from 'react-router-dom';
-import { BrowserProvider } from 'ethers';
-import VoteChainABI from '../abi/VoteChain.json'; // Import ABI
+import { ethers } from 'ethers';
+import VoteChainABI from '../abi/VoteChain.json';
 
 const contractAddress = '0xYourContractAddressHere';
 
@@ -34,18 +34,22 @@ const VotingPage = () => {
 
   const handleVoteClick = async () => {
     if (!selected) return alert('Please select a candidate.');
+
     try {
-      // Connect to MetaMask
       if (window.ethereum) {
-          const provider = new BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          const address = await signer.getAddress();
-          console.log("Wallet address:", address);
-        } else {
-          alert("Please install MetaMask!");
-        }
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        setWalletAddress(address); // ✅ Save to state
+        setShowModal(true); // ✅ Show modal after wallet connected
+        console.log("Wallet address:", address);
+      } else {
+        alert('Please install MetaMask!');
+      }
     } catch (error) {
       console.error('MetaMask connection error:', error);
+      alert('Failed to connect wallet.');
     }
   };
 
@@ -62,30 +66,31 @@ const VotingPage = () => {
       setShowModal(false);
     } catch (err) {
       console.error(err);
-      alert("❌ Voting failed. Check if you've already voted or try again.");
+      alert('❌ Voting failed. Check if you’ve already voted or try again.');
     }
   };
 
   const logout = () => {
+    localStorage.clear();
     localStorage.removeItem('user');
     navigate('/');
   };
 
   return (
-    <div className='voting-page'>
-      <nav className='nav'>
-        <div className='contain-nav'>
+    <div className="voting-page">
+      <nav className="nav">
+        <div className="contain-nav">
           <div>
             <img src={logo} alt="logo" />
             <h4>VoteChain</h4>
           </div>
           <div>
-            <button className='btn' onClick={logout}>Logout</button>
+            <button className="btn" onClick={logout}>Logout</button>
           </div>
         </div>
       </nav>
 
-      <div className='voting-body container'>
+      <div className="voting-body container">
         <h2 className="vote-heading">Click Below to Vote with Confidence!</h2>
         <div className="row candidate-cards">
           {candidates.map((candidate) => (
