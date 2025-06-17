@@ -45,7 +45,7 @@ const VotingPage = () => {
               img: i === 1 ? candidate1 : i === 2 ? candidate2 : candidate3 // Optional image logic
             });
           }
-
+          console.log(list)
           setCandidates(list);
         }
       } catch (error) {

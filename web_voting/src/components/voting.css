@@ -1,8 +1,10 @@
 .voting-page {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #F3FFF4;
   padding-bottom: 40px;
+  /* overflow-y: show; */
+  /* overflow-x: show; */
 }
 .voting-page .nav .contain-nav div{
   padding: 8px;

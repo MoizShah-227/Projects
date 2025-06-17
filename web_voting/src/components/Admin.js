@@ -3,6 +3,11 @@ import { ethers } from 'ethers';
 import voteAbi from '../abi/VoteChain.json';
 
 const contractAddress = "0xDD92959026E35A0D225C4B57B53Aa0a2142E7e7C";
+<style>
+  *{
+    
+  }
+</style>
 
 const Admin = () => {
   const [provider, setProvider] = useState(null);
@@ -71,7 +76,7 @@ const Admin = () => {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div style={{ padding: "2rem", fontWeight:400 }}>
       <h1>🗳️ VoteChain dApp</h1>
       <p>Connected as: {userAddress}</p>
 
