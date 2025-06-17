@@ -30,6 +30,7 @@ const LandingPage = () => {
           <h3>VoteChain</h3>
         </div>
         <div>
+          <button onClick={()=>{navigate("/adminlogin")}} className='admin-btn'>Admin</button>
           <button
             className='btn login-btn'
             onClick={() => navigate('/login')}
@@ -43,7 +44,7 @@ const LandingPage = () => {
 
       <div className='contain-hero'>
         <div className="row container">
-          <div className="col-lg-6 col-sm-12">
+          <div className="col-lg-6 col-md-12 col-sm-12">
             <h1>Secure, Transparent, and<br />
               Tamper-Proof Voting with <br />
               Blockchain</h1>
@@ -53,7 +54,7 @@ const LandingPage = () => {
               in real time.</p>
             <button className='btn voting-btn' onClick={handleEvent}>Vote</button>
           </div>
-          <div className="col-lg-6 col-sm-12">
+          <div className="col-lg-6 col-md-12 col-sm-12">
             <img src={hero} alt="" />
           </div>
         </div>

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import apiRequest from '../lib/ApiRequest.js';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './adminlogin.css';
-
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -12,27 +10,23 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    // Add login logic here
     try {
-      if(username=="Admin"&&password=="123"){
-          navigate('/admin');
-        }
-      
-    } catch (err) {
+      if(username === "Admin" && password === "123") {
+        navigate('/admin');
+      } else {
         setError("Invalid Credentials!!");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
     }
-
   };
 
-  
-  
-
   return (
-    <div className="admin-login d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="card p-4 shadow login-card" style={{ width: '400px' }}>
-        <h3 className="text-center mb-4">Admin Login</h3>
+    <div className="admin-login">
+      <div className="login-card">
+        <h3 className="text-center">Admin Login</h3>
         <form onSubmit={handleLogin}>
-          <div className="mb-3">
+          <div className="form-group">
             <label className="form-label">Username</label>
             <input
               type="text"
@@ -44,8 +38,8 @@ const Login = () => {
             />
           </div>
 
-          <div className="mb-3">
-           <label className="form-label">Password</label>
+          <div className="form-group">
+            <label className="form-label">Password</label>
             <input
               type="password"
               className="form-control"
@@ -55,14 +49,16 @@ const Login = () => {
               required
             />
           </div>
-          <button type="submit" className="login-btn btn w-100">
+          
+          <button type="submit" className="login-btn">
             Login
           </button>
-          <p className='error'>{error}</p>
+          
+          {error && <div className="error">{error}</div>}
         </form>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Login; 

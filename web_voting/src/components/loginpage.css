@@ -89,3 +89,47 @@ font-size: 20px;
   font-weight: 400;
 color: #184e38;
 }
+@media screen and (max-width: 1204px) {
+    .login-page .side-img{
+      display: none;
+
+    }
+    
+  .login-page .login-section .left-side .form-section{
+    width: 100%;
+    margin-top: 20px;
+    margin-left: 12px;
+    position: relative;
+    top: 0px;
+    right: 0px;
+
+  }
+  }
+
+  @media screen and (max-width: 466px) {
+  .login-page .form-section button{
+    width: 200px;
+    height: 40px;
+  }
+  .login-page .form-section input{
+    width: 200px;
+  }
+  .login-page .form-section h1{
+  font-size: 30px;
+  color: #145B3E;
+  font-weight: 600;  
+}
+.login-page .form-section p{
+font-size: 15px;
+  color: #145B3E;
+  font-weight: 400;  
+}
+  .login-page .form-section div{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .login-page{
+    padding-bottom: 40px;
+  }
+}

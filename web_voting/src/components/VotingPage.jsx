@@ -87,8 +87,18 @@ const VotingPage = () => {
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, VoteChainABI, signer);
 
-      const tx = await contract.vote(selected.id, cnic);
-      await tx.wait();
+      const [start, end] = await contract.getVotingTime();
+        const now = Math.floor(Date.now() / 1000);
+
+        if (now < start || now > end) {
+          alert("❌ Voting is not allowed at this time.");
+          setShowModal(false);
+          return;
+        }
+
+        // Proceed to vote
+        const tx = await contract.vote(selected.id, cnic);
+        await tx.wait();
 
       alert(`✅ Voted for ${selected.name}`);
       setShowModal(false);

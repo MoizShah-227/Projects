@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import voteAbi from '../abi/VoteChain.json';
+import AddCandidateModal from '../components/AddCandidateModal';
+import SetVotingTimeModal from '../components/SetVotingTimeModal';
 
 const contractAddress = "0xDD92959026E35A0D225C4B57B53Aa0a2142E7e7C";
-<style>
-  *{
-    
-  }
-</style>
 
 const Admin = () => {
+  const [showTimeModal, setShowTimeModal] = useState(false);
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
   const [contract, setContract] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [userAddress, setUserAddress] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -26,36 +25,37 @@ const Admin = () => {
         const address = await signer.getAddress();
 
         const contract = new ethers.Contract(contractAddress, voteAbi, signer);
-        console.log(contract)
         setProvider(prov);
         setSigner(signer);
         setContract(contract);
         setUserAddress(address);
       }
     };
-
     init();
   }, []);
 
-  // Add a candidate
-  const addCandidate = async () => {
-    const name = prompt("Candidate Name:");
-    const slogan = prompt("Candidate Slogan:");
-    const tx = await contract.addCandidate(name, slogan);
-    await tx.wait();
-    alert("Candidate added");
+  const addCandidate = async (name, slogan) => {
+    try {
+      const tx = await contract.addCandidate(name, slogan);
+      await tx.wait();
+      alert("✅ Candidate added!");
+      setShowModal(false);
+    } catch (err) {
+      alert("❌ Failed to add candidate.");
+    }
   };
 
-  // Set voting time
-  const setVotingTime = async () => {
-    const start = Math.floor(Date.now() / 1000); // now
-    const end = start + 3600; // 1 hour later
+  const setVotingTime = async (start, end) => {
+  try {
     const tx = await contract.setVotingTime(start, end);
     await tx.wait();
-    alert("Voting time set!");
-  };
+    alert("✅ Voting time set!");
+  } catch (err) {
+    alert("❌ Failed to set voting time.");
+    console.error(err);
+  }
+};
 
-  // Vote
   const vote = async () => {
     const id = prompt("Enter Candidate ID:");
     const cnic = prompt("Enter Your CNIC:");
@@ -64,7 +64,6 @@ const Admin = () => {
     alert("Vote casted!");
   };
 
-  // Fetch all candidates
   const loadCandidates = async () => {
     const count = await contract.getTotalCandidates();
     const list = [];
@@ -76,13 +75,13 @@ const Admin = () => {
   };
 
   return (
-    <div style={{ padding: "2rem", fontWeight:400 }}>
+    <div style={{ padding: "2rem", fontWeight: 400 }}>
       <h1>🗳️ VoteChain dApp</h1>
       <p>Connected as: {userAddress}</p>
 
-      <button onClick={addCandidate}>➕ Add Candidate</button>
-      <button onClick={setVotingTime}>⏰ Set Voting Time</button>
-      <button onClick={vote}>🗳️ Vote</button>
+      <button onClick={() => setShowModal(true)}>➕ Add Candidate</button>
+      <button onClick={() => setShowTimeModal(true)}>⏰ Set Voting Time</button>
+      {/* <button onClick={vote}>🗳️ Vote</button> */}
       <button onClick={loadCandidates}>📋 Load Candidates</button>
 
       <hr />
@@ -93,6 +92,17 @@ const Admin = () => {
           <strong>Votes: {c.votes.toString()}</strong>
         </div>
       ))}
+
+      <AddCandidateModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        onSubmit={addCandidate}
+      />
+      <SetVotingTimeModal
+      show={showTimeModal}
+      onHide={() => setShowTimeModal(false)}
+      onSubmit={setVotingTime}
+      />
     </div>
   );
 };
