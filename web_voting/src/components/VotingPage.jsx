@@ -9,54 +9,77 @@ import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import VoteChainABI from '../abi/VoteChain.json';
 
-const contractAddress = '0xYourContractAddressHere';
+const contractAddress = '0xDD92959026E35A0D225C4B57B53Aa0a2142E7e7C';
 
 const VotingPage = () => {
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [cnic, setCnic] = useState('');
+  const [candidates, setCandidates] = useState([]);
   const navigate = useNavigate();
-
-  const candidates = [
-    { id: 1, name: 'Ali Raza', slogan: 'Transparency & Trust', img: candidate1 },
-    { id: 2, name: 'Fatima Khan', slogan: 'Empowering Every Voice', img: candidate2 },
-    { id: 3, name: 'Usman Tariq', slogan: 'Leading with Integrity', img: candidate3 },
-  ];
 
   useEffect(() => {
     // Get CNIC from localStorage on load
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      setCnic(user.cnic);
-    }
+    if (user) setCnic(user.cnic);
+
+    // Fetch candidates from smart contract
+    const fetchCandidates = async () => {
+      try {
+        if (window.ethereum) {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const signer = provider.getSigner();
+          const contract = new ethers.Contract(contractAddress, VoteChainABI, signer);
+
+          const count = await contract.getTotalCandidates();
+          const list = [];
+
+          for (let i = 1; i <= count; i++) {
+            const c = await contract.getCandidate(i);
+            list.push({
+              id: i,
+              name: c[0],
+              slogan: c[1],
+              votes: c[2].toString(),
+              img: i === 1 ? candidate1 : i === 2 ? candidate2 : candidate3 // Optional image logic
+            });
+          }
+
+          setCandidates(list);
+        }
+      } catch (error) {
+        console.error("Error loading candidates:", error);
+      }
+    };
+
+    fetchCandidates();
   }, []);
 
-const handleVoteClick = async () => {
-  if (!selected) return alert('Please select a candidate.');
+  const handleVoteClick = async () => {
+    if (!selected) return alert('Please select a candidate.');
 
-  try {
-    if (window.ethereum) {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send('eth_requestAccounts', []);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
 
-      setWalletAddress(address); // ✅ Set wallet address
+        setWalletAddress(address);
 
-      // ✅ Wait for state to update before showing modal
-      setTimeout(() => {
-        setShowModal(true);
-      }, 100); // small delay to ensure state updates
-    } else {
-      alert('Please install MetaMask!');
+        // Show confirmation modal
+        setTimeout(() => {
+          setShowModal(true);
+        }, 100);
+      } else {
+        alert('Please install MetaMask!');
+      }
+    } catch (error) {
+      console.error('MetaMask connection error:', error);
+      alert('Failed to connect wallet.');
     }
-  } catch (error) {
-    console.error('MetaMask connection error:', error);
-    alert('Failed to connect wallet.');
-  }
-};
-
+  };
 
   const confirmVote = async () => {
     try {
@@ -77,7 +100,6 @@ const handleVoteClick = async () => {
 
   const logout = () => {
     localStorage.clear();
-    localStorage.removeItem('user');
     navigate('/');
   };
 
@@ -98,17 +120,21 @@ const handleVoteClick = async () => {
       <div className="voting-body container">
         <h2 className="vote-heading">Click Below to Vote with Confidence!</h2>
         <div className="row candidate-cards">
-          {candidates.map((candidate) => (
-            <div
-              key={candidate.id}
-              className={`col-lg-4 col-sm-12 candidate-card ${selected?.id === candidate.id ? 'selected' : ''}`}
-              onClick={() => setSelected(candidate)}
-            >
-              <img src={candidate.img} alt={candidate.name} />
-              <h3>{candidate.name}</h3>
-              <p>{candidate.slogan}</p>
-            </div>
-          ))}
+          {candidates.length === 0 ? (
+            <p>Loading candidates...</p>
+          ) : (
+            candidates.map((candidate) => (
+              <div
+                key={candidate.id}
+                className={`col-lg-4 col-sm-12 candidate-card ${selected?.id === candidate.id ? 'selected' : ''}`}
+                onClick={() => setSelected(candidate)}
+              >
+                <img src={candidate.img} alt={candidate.name} />
+                <h3>{candidate.name}</h3>
+                <p>{candidate.slogan}</p>
+              </div>
+            ))
+          )}
         </div>
 
         <button className="btn vote-btn" onClick={handleVoteClick}>Vote</button>
