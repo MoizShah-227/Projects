@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {

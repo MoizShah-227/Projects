@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">voting</string>
-    <string name="title_activity_main">voting</string>
-    <string name="package_name">voting.com</string>
-    <string name="custom_url_scheme">voting.com</string>
+    <string name="app_name">votingApp</string>
+    <string name="title_activity_main">votingApp</string>
+    <string name="package_name">votingapp.com</string>
+    <string name="custom_url_scheme">votingapp.com</string>
 </resources>

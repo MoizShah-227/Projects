@@ -1,4 +1,4 @@
-package voting.com;
+package votingapp.com;
 
 import com.getcapacitor.BridgeActivity;
 

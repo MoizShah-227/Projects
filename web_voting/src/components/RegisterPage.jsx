@@ -4,6 +4,7 @@ import side from '../img/Side Image.svg';
 import './loginpage.css';
 import { useNavigate } from 'react-router-dom';
 import apirequest from '../lib/ApiRequest';
+import LandingAnimation from './LoadingAnimation'; // 👈 Import the loader
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // 👈 loading state
 
   const formatDateToMMDDYYYY = (inputDate) => {
     const date = new Date(inputDate);
@@ -31,6 +33,8 @@ const RegisterPage = () => {
 
     const formattedDob = formatDateToMMDDYYYY(dob);
 
+    setLoading(true); // 👈 show animation
+
     try {
       const response = await apirequest.post('/register', {
         name,
@@ -42,78 +46,84 @@ const RegisterPage = () => {
       });
 
       alert('✅ Registration successful!');
-
-      navigate('/login'); 
-
+      navigate('/login');
     } catch (error) {
-        const msg = error?.response?.data?.message || 'Something went wrong!';
-        alert(`❌ ${msg}`);
+      const msg = error?.response?.data?.message || 'Something went wrong!';
+      alert(`❌ ${msg}`);
+    } finally {
+      setLoading(false); // 👈 hide animation
     }
   };
 
   return (
-    <div className='login-page'>
-      <nav className='nav'>
-        <div>
-          <img src={logo} alt="logo" />
-          <h4>VoteChain</h4>
-        </div>
-      </nav>
+    <>
+      {loading && <LandingAnimation />} {/* 👈 Show loader */}
 
-      <div className='login-section'>
-        <div className='row'>
-          <div className='col-lg-6 col-sm-12 left-side'>
-            <img src={side} className='side-img' alt="illustration" />
+      <div className='login-page'>
+        <nav className='nav'>
+          <div>
+            <img src={logo} alt="logo" />
+            <h4>VoteChain</h4>
           </div>
+        </nav>
 
-          <div className='col-lg-6 col-sm-12'>
-            <div className='form-section p-2'>
-              <input
-                type="text"
-                placeholder='Full Name'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder='CNIC'
-                value={cnic}
-                onChange={(e) => setCnic(e.target.value)}
-              />
-              <input
-                type="date"
-                placeholder='Date of Birth'
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder='Phone Number'
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder='Email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                type="password"
-                placeholder='Password'
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button className='btn' onClick={handleRegister}>Register</button>
+        <div className='login-section'>
+          <div className='row'>
+            <div className='col-lg-6 col-sm-12 left-side'>
+              <img src={side} className='side-img' alt="illustration" />
+            </div>
 
-              <div>
-                <a href="/">Back to home</a>
+            <div className='col-lg-6 col-sm-12'>
+              <div className='form-section p-2'>
+                <input
+                  type="text"
+                  placeholder='Full Name'
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder='CNIC'
+                  value={cnic}
+                  onChange={(e) => setCnic(e.target.value)}
+                />
+                <input
+                  type="date"
+                  placeholder='Date of Birth'
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder='Phone Number'
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder='Email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder='Password'
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button className='btn' onClick={handleRegister} disabled={loading}>
+                  {loading ? 'Registering...' : 'Register'}
+                </button>
+
+                <div>
+                  <a href="/">Back to home</a>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

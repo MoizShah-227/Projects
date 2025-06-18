@@ -101,7 +101,10 @@
 @media screen and (max-width: 502px) {
     .landing-page .nav-bar .logo{
         display: none;
-    }   
+    }
+    .landing-page .nav-bar{
+        padding-top: 40px;
+    }
 }
 @media screen and (max-width: 615px) {
     .landing-page{

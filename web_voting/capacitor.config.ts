@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'voting.com',
-  appName: 'voting',
+  appId: 'votingapp.com',
+  appName: 'votingApp',
   webDir: 'build'
 };
 

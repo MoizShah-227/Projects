@@ -7,7 +7,6 @@ import Register from './components/RegisterPage';
 import VotingPage from './components/VotingPage';
 import Admin from './components/Admin';
 import AdminLogin from './components/Adminlogin';
-
 function App() {
   return (
     <Router>
@@ -18,6 +17,7 @@ function App() {
         <Route path="/vote" element={< VotingPage/>} />
         <Route path="/admin" element={< Admin/>} />
         <Route path="/adminlogin" element={< AdminLogin/>} />
+
       </Routes>
     </Router>
   );
