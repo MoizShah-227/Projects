@@ -5,7 +5,16 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "Node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "docker:build": "docker build -t voting-server .",
+    "docker:run": "docker run -p 5000:5000 --env-file .env voting-server",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "docker:compose:down": "docker-compose down",
+    "docker:compose:dev:down": "docker-compose -f docker-compose.dev.yml down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:dev": "docker-compose -f docker-compose.dev.yml logs -f"
   },
   "author": "",
   "license": "ISC",
