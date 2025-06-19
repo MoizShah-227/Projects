@@ -21,7 +21,7 @@ const Admin = () => {
         const prov = new ethers.providers.Web3Provider(window.ethereum);
         await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-        const signer = await prov.getSigner();
+        const signer =  await prov.getSigner();
         const address = await signer.getAddress();
 
         const contract = new ethers.Contract(contractAddress, voteAbi, signer);

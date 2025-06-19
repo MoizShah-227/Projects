@@ -17,7 +17,6 @@ function App() {
         <Route path="/vote" element={< VotingPage/>} />
         <Route path="/admin" element={< Admin/>} />
         <Route path="/adminlogin" element={< AdminLogin/>} />
-
       </Routes>
     </Router>
   );
