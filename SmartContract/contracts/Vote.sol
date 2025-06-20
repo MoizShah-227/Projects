@@ -1,8 +1,4 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract Vote{
-
+contract Vote {
     struct Candidate {
         uint id;
         string name;
@@ -15,17 +11,32 @@ contract Vote{
         string cnic;
     }
 
+    struct ElectionResult {
+        uint startTime;
+        uint endTime;
+        string day;
+        string date;
+        uint totalVotes;
+        uint winnerId;
+        string winnerName;
+        uint winnerVotes;
+    }
+
     address public admin;
     uint public candidateCount;
     uint public totalVotes;
     uint public startTime;
     uint public endTime;
+    bool public votingEnded;
 
     mapping(uint => Candidate) public candidates;
     mapping(address => Voter) public voters;
-    mapping(string => bool) private usedCNICs; // Prevent double voting by CNIC
+    mapping(string => bool) private usedCNICs;
+
+    ElectionResult[] public history;
 
     event VoteCasted(address indexed voter, uint candidateId);
+    event VotingEnded(ElectionResult result);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin can perform this action.");
@@ -41,26 +52,27 @@ contract Vote{
         admin = msg.sender;
     }
 
-    // Admin can set voting time window
     function setVotingTime(uint _startTime, uint _endTime) public onlyAdmin {
         require(_startTime < _endTime, "Start time must be before end time.");
         startTime = _startTime;
         endTime = _endTime;
+        votingEnded = false;
+        totalVotes = 0;
+        for (uint i = 1; i <= candidateCount; i++) {
+            candidates[i].voteCount = 0;
+        }
     }
 
-    // Add candidate (only admin)
     function addCandidate(string memory _name, string memory _slogan) public onlyAdmin {
         candidateCount++;
         candidates[candidateCount] = Candidate(candidateCount, _name, _slogan, 0);
     }
 
-    // Vote for a candidate
     function vote(uint _candidateId, string memory _cnic) public onlyDuringVoting {
-        require(!voters[msg.sender].hasVoted, "You have already voted with this wallet.");
-        require(!usedCNICs[_cnic], "This CNIC has already been used to vote.");
+        require(!voters[msg.sender].hasVoted, "You have already voted.");
+        require(!usedCNICs[_cnic], "This CNIC has already been used.");
         require(_candidateId > 0 && _candidateId <= candidateCount, "Invalid candidate ID");
 
-        // Record the vote
         voters[msg.sender] = Voter(true, _cnic);
         usedCNICs[_cnic] = true;
         candidates[_candidateId].voteCount++;
@@ -69,34 +81,45 @@ contract Vote{
         emit VoteCasted(msg.sender, _candidateId);
     }
 
-    // Get candidate details
-    function getCandidate(uint _id) public view returns (string memory, string memory, uint) {
-        Candidate memory c = candidates[_id];
-        return (c.name, c.slogan, c.voteCount);
+    function checkAndEndVoting(string memory _day, string memory _date) public {
+        if (block.timestamp > endTime && !votingEnded) {
+            uint maxVotes = 0;
+            uint winnerId = 0;
+
+            for (uint i = 1; i <= candidateCount; i++) {
+                if (candidates[i].voteCount > maxVotes) {
+                    maxVotes = candidates[i].voteCount;
+                    winnerId = i;
+                }
+            }
+
+            ElectionResult memory result = ElectionResult({
+                startTime: startTime,
+                endTime: endTime,
+                day: _day,
+                date: _date,
+                totalVotes: totalVotes,
+                winnerId: winnerId,
+                winnerName: candidates[winnerId].name,
+                winnerVotes: maxVotes
+            });
+
+            history.push(result);
+            votingEnded = true;
+
+            emit VotingEnded(result);
+        }
     }
 
-    // Get total candidates
-    function getTotalCandidates() public view returns (uint) {
-        return candidateCount;
+    function getElectionHistoryCount() public view returns (uint) {
+        return history.length;
     }
 
-    // Check if a user has voted
-    function hasVoted(address _user) public view returns (bool) {
-        return voters[_user].hasVoted;
-    }
-
-    // Admin can see voter's CNIC
-    function getVoterCNIC(address _voter) public view onlyAdmin returns (string memory) {
-        return voters[_voter].cnic;
-    }
-
-    // Get total votes cast
-    function getTotalVotes() public view returns (uint) {
-        return totalVotes;
-    }
-
-    // Get voting time window
-    function getVotingTime() public view returns (uint, uint) {
-        return (startTime, endTime);
+    function getElectionResult(uint index) public view returns (
+        uint, uint, string memory, string memory, uint, uint, string memory, uint
+    ) {
+        require(index < history.length, "Invalid index.");
+        ElectionResult memory r = history[index];
+        return (r.startTime, r.endTime, r.day, r.date, r.totalVotes, r.winnerId, r.winnerName, r.winnerVotes);
     }
 }

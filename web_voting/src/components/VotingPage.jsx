@@ -10,7 +10,7 @@ import { ethers } from 'ethers';
 import VoteChainABI from '../abi/VoteChain.json';
 import LandingAnimation from './LoadingAnimation'; // 👈 Import loader
 
-const contractAddress = '0xDD92959026E35A0D225C4B57B53Aa0a2142E7e7C';
+const contractAddress = '0x3f27a4b8032820418Fb7108F20069B10d1C1Df0d';
 
 const VotingPage = () => {
   const [selected, setSelected] = useState(null);
