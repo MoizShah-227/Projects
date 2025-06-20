@@ -7,45 +7,11 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mongodb://mongo:27017/voting_app
-    depends_on:
-      - mongo
+    env_file:
+      - .env
     restart: unless-stopped
     networks:
       - voting-network
-
-  mongo:
-    image: mongo:7.0
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=voting_app
-    volumes:
-      - mongo_data:/data/db
-    restart: unless-stopped
-    networks:
-      - voting-network
-
-  # Optional: MongoDB Express for database management
-  mongo-express:
-    image: mongo-express:latest
-    ports:
-      - "8081:8081"
-    environment:
-      - ME_CONFIG_MONGODB_SERVER=mongo
-      - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
-    depends_on:
-      - mongo
-    restart: unless-stopped
-    networks:
-      - voting-network
-
-volumes:
-  mongo_data:
 
 networks:
   voting-network:

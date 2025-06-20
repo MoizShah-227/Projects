@@ -1,22 +1,29 @@
 # Docker Setup for Voting Server
 
-This guide explains how to run the voting server using Docker.
+This guide explains how to run the voting server using Docker with an external MongoDB database.
 
 ## Prerequisites
 
 - Docker
 - Docker Compose
+- External MongoDB database (MongoDB Atlas, local MongoDB, etc.)
 
 ## Quick Start
 
 ### Production Environment
 
-1. **Build and run with Docker Compose:**
+1. **Set up environment variables:**
+   ```bash
+   cp env.example .env
+   # Edit .env with your MongoDB URL and other settings
+   ```
+
+2. **Build and run with Docker Compose:**
    ```bash
    npm run docker:compose
    ```
 
-2. **Or manually:**
+3. **Or manually:**
    ```bash
    # Build the image
    docker build -t voting-server .
@@ -39,11 +46,8 @@ This guide explains how to run the voting server using Docker.
 
 ## Services
 
-The Docker setup includes:
-
+The Docker setup includes only the application server:
 - **App**: Node.js Express server (port 5000)
-- **MongoDB**: Database (port 27017)
-- **Mongo Express**: Database management UI (port 8081)
 
 ## Environment Variables
 
@@ -54,7 +58,7 @@ cp env.example .env
 ```
 
 Key variables:
-- `DATABASE_URL`: MongoDB connection string
+- `DATABASE_URL`: Your external MongoDB connection string
 - `NODE_ENV`: Environment (production/development)
 - `JWT_SECRET`: Secret for JWT tokens
 - `CORS_ORIGIN`: Frontend URL for CORS
@@ -81,24 +85,35 @@ npm run docker:build
 npm run docker:run
 ```
 
-## Database Management
+## Database Setup
 
-Access MongoDB Express at `http://localhost:8081`:
-- Username: `admin`
-- Password: `admin123`
+Since you're using an external MongoDB:
+
+1. **MongoDB Atlas** (recommended):
+   - Create a cluster at [MongoDB Atlas](https://www.mongodb.com/atlas)
+   - Get your connection string
+   - Add it to your `.env` file
+
+2. **Local MongoDB**:
+   - Install MongoDB locally
+   - Use connection string: `mongodb://localhost:27017/voting_app`
+
+3. **Other MongoDB services**:
+   - Use your provider's connection string
 
 ## Troubleshooting
 
-1. **Port conflicts**: Change ports in `docker-compose.yml`
-2. **Database connection**: Ensure MongoDB service is running
-3. **Environment variables**: Check `.env` file exists and is configured
+1. **Database connection**: Ensure your MongoDB URL is correct in `.env`
+2. **Network issues**: Check if your MongoDB is accessible from Docker
+3. **Environment variables**: Verify `.env` file exists and is configured
 4. **Prisma issues**: Run `npx prisma generate` inside container if needed
 
 ## Production Deployment
 
 For production, consider:
-- Using external MongoDB service
+- Using MongoDB Atlas or managed MongoDB service
 - Setting up proper environment variables
 - Configuring reverse proxy (nginx)
 - Setting up SSL certificates
-- Using Docker secrets for sensitive data 
+- Using Docker secrets for sensitive data
+- Setting up database backups 
