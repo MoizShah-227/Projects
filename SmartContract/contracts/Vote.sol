@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 contract Vote {
     struct Candidate {
         uint id;
@@ -33,6 +36,9 @@ contract Vote {
     mapping(address => Voter) public voters;
     mapping(string => bool) private usedCNICs;
 
+    address[] public voterAddresses;      // Track who voted
+    string[] public usedCnicList;         // Track which CNICs were used
+
     ElectionResult[] public history;
 
     event VoteCasted(address indexed voter, uint candidateId);
@@ -58,9 +64,24 @@ contract Vote {
         endTime = _endTime;
         votingEnded = false;
         totalVotes = 0;
+
+        // Reset previous candidates
         for (uint i = 1; i <= candidateCount; i++) {
-            candidates[i].voteCount = 0;
+            delete candidates[i];
         }
+        candidateCount = 0;
+
+        // Reset voter addresses and records
+        for (uint i = 0; i < voterAddresses.length; i++) {
+            delete voters[voterAddresses[i]];
+        }
+        delete voterAddresses;
+
+        // Reset CNICs
+        for (uint i = 0; i < usedCnicList.length; i++) {
+            delete usedCNICs[usedCnicList[i]];
+        }
+        delete usedCnicList;
     }
 
     function addCandidate(string memory _name, string memory _slogan) public onlyAdmin {
@@ -75,6 +96,9 @@ contract Vote {
 
         voters[msg.sender] = Voter(true, _cnic);
         usedCNICs[_cnic] = true;
+        usedCnicList.push(_cnic);
+        voterAddresses.push(msg.sender);
+
         candidates[_candidateId].voteCount++;
         totalVotes++;
 
@@ -101,13 +125,29 @@ contract Vote {
                 totalVotes: totalVotes,
                 winnerId: winnerId,
                 winnerName: candidates[winnerId].name,
-                winnerVotes: maxVotes
+                winnerVotes: candidates[winnerId].voteCount
             });
 
             history.push(result);
             votingEnded = true;
 
             emit VotingEnded(result);
+
+            // ✅ Reset data after saving result
+            for (uint i = 1; i <= candidateCount; i++) {
+                delete candidates[i];
+            }
+            candidateCount = 0;
+
+            for (uint i = 0; i < voterAddresses.length; i++) {
+                delete voters[voterAddresses[i]];
+            }
+            delete voterAddresses;
+
+            for (uint i = 0; i < usedCnicList.length; i++) {
+                delete usedCNICs[usedCnicList[i]];
+            }
+            delete usedCnicList;
         }
     }
 
@@ -120,6 +160,25 @@ contract Vote {
     ) {
         require(index < history.length, "Invalid index.");
         ElectionResult memory r = history[index];
-        return (r.startTime, r.endTime, r.day, r.date, r.totalVotes, r.winnerId, r.winnerName, r.winnerVotes);
+        return (
+            r.startTime,
+            r.endTime,
+            r.day,
+            r.date,
+            r.totalVotes,
+            r.winnerId,
+            r.winnerName,
+            r.winnerVotes
+        );
+    }
+
+    function getTotalCandidates() public view returns (uint) {
+        return candidateCount;
+    }
+
+    function getCandidate(uint _id) public view returns (string memory, string memory, uint) {
+        require(_id > 0 && _id <= candidateCount, "Invalid candidate ID");
+        Candidate memory c = candidates[_id];
+        return (c.name, c.slogan, c.voteCount);
     }
 }

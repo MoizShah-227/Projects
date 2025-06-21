@@ -4,7 +4,7 @@ import voteAbi from '../abi/VoteChain.json';
 import AddCandidateModal from '../components/AddCandidateModal';
 import SetVotingTimeModal from '../components/SetVotingTimeModal';
 
-const contractAddress = "0x3f27a4b8032820418Fb7108F20069B10d1C1Df0d";
+const contractAddress = "0xBE7DA091f727239b3edefd259195630c906c6274";
 
 const Admin = () => {
   const [showTimeModal, setShowTimeModal] = useState(false);
@@ -15,6 +15,8 @@ const Admin = () => {
   const [userAddress, setUserAddress] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [history, setHistory] = useState([]);
+  const [countdown, setCountdown] = useState(null);
+  const [disableSetTime, setDisableSetTime] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -25,34 +27,88 @@ const Admin = () => {
         const signer = await prov.getSigner();
         const address = await signer.getAddress();
 
-        const contract = new ethers.Contract(contractAddress, voteAbi, signer);
+        const contract = new ethers.Contract(contractAddress, voteAbi.abi, signer);
         setProvider(prov);
         setSigner(signer);
         setContract(contract);
         setUserAddress(address);
+
+        const start = await contract.startTime();
+        const end = await contract.endTime();
+        const now = Math.floor(Date.now() / 1000);
+
+        if (start > 0 && now < end) {
+          setDisableSetTime(true);
+          updateCountdown(end);
+        }
       }
     };
     init();
   }, []);
 
-  // Auto end voting check
+  // Countdown tick
   useEffect(() => {
-    const interval = setInterval(async () => {
-      if (contract) {
-        const [start, end] = await contract.getVotingTime();
-        const now = Math.floor(Date.now() / 1000);
-        if (now > Number(end)) {
-          try {
-            await contract.checkAndEndVoting("Thursday", "2025-06-19");
-            console.log("✅ Voting auto-ended");
-          } catch (e) {
-            console.log("Voting already ended or failed:", e.reason);
-          }
-        }
+    const timer = setInterval(() => {
+      if (countdown && countdown > 0) {
+        setCountdown(prev => prev - 1);
       }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [contract]);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const updateCountdown = (endTime) => {
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = endTime - now;
+    if (remaining > 0) {
+      setCountdown(remaining);
+    } else {
+      setCountdown(null);
+    }
+  };
+
+  const formatCountdown = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  // Auto End Voting When Time Ends
+  useEffect(() => {
+  let hasEnded = false; // ✅ Control flag outside interval
+
+  const interval = setInterval(async () => {
+    if (contract && !hasEnded) {
+      try {
+        const end = await contract.endTime();
+        const votingStatus = await contract.votingEnded();
+        const now = Math.floor(Date.now() / 1000);
+
+        if (now > Number(end) && !votingStatus) {
+          console.log("⌛ Voting should end now.");
+
+          // Only call transaction once
+          hasEnded = true;
+
+          const nowDate = new Date();
+          const day = nowDate.toLocaleDateString('en-US', { weekday: 'long' });
+          const date = nowDate.toISOString().split('T')[0];
+
+          const tx = await contract.checkAndEndVoting(day, date);
+          await tx.wait();
+
+          console.log("✅ Voting ended automatically.");
+          setCountdown(null);
+          setDisableSetTime(false);
+        }
+      } catch (e) {
+        console.log("⚠️ Auto-end error:", e.reason || e.message);
+      }
+    }
+  }, 10000);
+
+  return () => clearInterval(interval);
+}, [contract]);
 
   const addCandidate = async (name, slogan) => {
     try {
@@ -70,6 +126,8 @@ const Admin = () => {
       const tx = await contract.setVotingTime(start, end);
       await tx.wait();
       alert("✅ Voting time set!");
+      setDisableSetTime(true);
+      updateCountdown(end);
     } catch (err) {
       alert("❌ Failed to set voting time.");
       console.error(err);
@@ -111,8 +169,16 @@ const Admin = () => {
       <h1>🗳️ VoteChain dApp</h1>
       <p>Connected as: {userAddress}</p>
 
+      {countdown && (
+        <p style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2c3e50" }}>
+          ⏳ Voting ends in: {formatCountdown(countdown)}
+        </p>
+      )}
+
       <button onClick={() => setShowModal(true)}>➕ Add Candidate</button>
-      <button onClick={() => setShowTimeModal(true)}>⏰ Set Voting Time</button>
+      <button onClick={() => setShowTimeModal(true)} disabled={disableSetTime}>
+        ⏰ Set Voting Time
+      </button>
       <button onClick={loadCandidates}>📋 Load Candidates</button>
       <button onClick={loadHistory}>📊 Election History</button>
 
