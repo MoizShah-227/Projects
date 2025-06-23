@@ -7,8 +7,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",              // React dev
   "capacitor://localhost",              // Android/iOS Capacitor apps
-  "http://localhost",                   // Android emulator
   "https://projects-1-7vmq.onrender.com" // Your deployed frontend
+  
 ];
 
 app.use(cors({
