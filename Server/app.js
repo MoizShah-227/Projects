@@ -6,16 +6,17 @@ const app = express();
 
 // ✅ Allow all dev and mobile origins
 const allowedOrigins = [
-  "http://localhost:3000",     // React frontend (dev)
-  "capacitor://localhost",     // Android/iOS Capacitor apps
-  "http://localhost",          // Android emulators or bare HTTP
-  undefined                    // Mobile apps may send no origin at all
+  "http://localhost:3000",         // React dev (default)
+  "https://localhost",             // React dev with HTTPS
+  "capacitor://localhost",         // Mobile APK
+  "http://localhost",              // Android emulator
+  undefined                        // Mobile apps / curl
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // ✅ Allow
+      callback(null, true);
     } else {
       console.log("❌ Blocked CORS origin:", origin);
       callback(new Error("Not allowed by CORS: " + origin));
