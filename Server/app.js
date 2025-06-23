@@ -1,15 +1,14 @@
-import express from 'express'
+import express from 'express';
 import authRoute from './Routes/authRoute.js';
 import cors from 'cors';
 
-const app = express()
+const app = express();
 
-// app.use(cors({origin:"http://localhost:3000",credentials:true}));    ///this for frontend
 const allowedOrigins = [
-  "http://localhost:3000",           // React dev
-  "capacitor://localhost",           // Android/iOS Capacitor apps
-  "http://localhost",                // sometimes used in emulators
-  "https://projects-1-7vmq.onrender.com" // your deployed frontend
+  "http://localhost:3000",              // React dev
+  "capacitor://localhost",              // Android/iOS Capacitor apps
+  "http://localhost",                   // Android emulator
+  "https://projects-1-7vmq.onrender.com" // Your deployed frontend
 ];
 
 app.use(cors({
@@ -17,14 +16,17 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log("❌ CORS blocked origin:", origin);
       callback(new Error("Not allowed by CORS: " + origin));
     }
   },
+  credentials: true // ✅ Required if using cookies/session auth
 }));
 
 app.use(express.json());
 
-app.use('/api',authRoute);
-app.listen(5000,()=>{
-    console.log("server is Runing")
-})
+app.use('/api', authRoute);
+
+app.listen(5000, () => {
+  console.log("✅ Server is running on port 5000");
+});
