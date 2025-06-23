@@ -53,6 +53,7 @@ const Login = () => {
           <button type="submit" className="login-btn">
             Login
           </button>
+          <a href="/">back to Home</a>
           
           {error && <div className="error">{error}</div>}
         </form>

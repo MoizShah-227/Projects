@@ -239,11 +239,11 @@ const loadHistory = async () => {
       {loading && <LandingAnimation />}
 
       <div style={{ padding: '2rem', fontWeight: 500 }}>
+        <a href='/'>Back to home</a>
         <ConnectButton />
         <h1>🗳️ VoteChain dApp</h1>
 
-        {userAddress && <p>Connected as: {userAddress}</p>}
-
+        {userAddress && <p>Connected as: {userAddress} </p>}
         {countdown > 0 && (
           <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#07090a'  }}>
             ⏳ Voting ends in: {formatCountdown(countdown)}
@@ -256,7 +256,7 @@ const loadHistory = async () => {
         </button>
         <button onClick={loadCandidates}>📋 Load Candidates</button>
         <button onClick={loadHistory}>📊 Election History</button>
-
+        
         <hr />
         {candidates.map((c) => (
           <div key={c.id} style={{ border: '1px solid #ccc', padding: '1rem', margin: '1rem 0' }}>
@@ -288,6 +288,7 @@ const loadHistory = async () => {
         onHide={() => setShowTimeModal(false)}
         onSubmit={setVotingTime}
       />
+
     </div>
   );
 };
