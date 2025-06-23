@@ -11,8 +11,6 @@ import voteAbi from '../abi/VoteChain.json';
 import AddCandidateModal from '../components/AddCandidateModal';
 import SetVotingTimeModal from '../components/SetVotingTimeModal';
 import LandingAnimation from './LoadingAnimation';
-
-
 const contractAddress = '0xBE7DA091f727239b3edefd259195630c906c6274';
 
 const Admin = () => {
