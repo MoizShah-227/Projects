@@ -20,7 +20,6 @@ app.use(cors({
       callback(new Error("Not allowed by CORS: " + origin));
     }
   },
-  credentials: true
 }));
 
 app.use(express.json());
