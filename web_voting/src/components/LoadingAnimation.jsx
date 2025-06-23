@@ -5,8 +5,7 @@ const Loader = () => {
   return (
     <div className="loader-wrapper">
       <div className="loader"></div>
-      <p>Logging you in...</p>
-    </div>
+      </div>
   );
 };
 

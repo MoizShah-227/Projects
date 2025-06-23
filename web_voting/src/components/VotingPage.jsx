@@ -6,7 +6,8 @@ import candidate1 from '../img/avatar.png';
 import candidate2 from '../img/avatar.png';
 import candidate3 from '../img/avatar.png';
 import { useNavigate } from 'react-router-dom';
-import { ethers } from 'ethers';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import VoteChainABI from '../abi/VoteChain.json';
 import LandingAnimation from './LoadingAnimation';
 
@@ -15,67 +16,85 @@ const contractAddress = '0xBE7DA091f727239b3edefd259195630c906c6274';
 const VotingPage = () => {
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
   const [cnic, setCnic] = useState('');
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [contract, setContract] = useState(null);
   const [votingStatus, setVotingStatus] = useState('loading'); // loading, notStarted, inProgress, ended
-  const navigate = useNavigate();
 
-  // Connect wallet & fetch candidates + voting status
+  const navigate = useNavigate();
+  const { address: walletAddress, isConnected } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+
+  const { data: startTimeData } = useReadContract({
+    address: contractAddress,
+    abi: VoteChainABI.abi,
+    functionName: 'startTime',
+    watch: true,
+  });
+
+  const { data: endTimeData } = useReadContract({
+    address: contractAddress,
+    abi: VoteChainABI.abi,
+    functionName: 'endTime',
+    watch: true,
+  });
+
+  // Load CNIC from localStorage and check voting status
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (user?.cnic) setCnic(user.cnic);
+  }, []);
 
-    const init = async () => {
-      try {
-        if (window.ethereum) {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          await provider.send('eth_requestAccounts', []);
-          const signer = provider.getSigner();
-          const address = await signer.getAddress();
+  useEffect(() => {
+    const loadCandidates = async () => {
+      if (!publicClient || !startTimeData || !endTimeData) return;
 
-          setWalletAddress(address);
-          const voteContract = new ethers.Contract(contractAddress, VoteChainABI.abi, signer);
-          setContract(voteContract);
+      const now = Math.floor(Date.now() / 1000);
+      const start = Number(startTimeData);
+      const end = Number(endTimeData);
 
-          const now = Math.floor(Date.now() / 1000);
-          const start = await voteContract.startTime();
-          const end = await voteContract.endTime();
+      if (now < start) {
+        setVotingStatus('notStarted');
+      } else if (now >= start && now <= end) {
+        setVotingStatus('inProgress');
+        try {
+          const count = Number(await publicClient.readContract({
+            address: contractAddress,
+            abi: VoteChainABI.abi,
+            functionName: 'getTotalCandidates',
+          }));
 
-          if (now < start) {
-            setVotingStatus('notStarted');
-          } else if (now >= start && now <= end) {
-            setVotingStatus('inProgress');
+          const list = [];
+          for (let i = 1; i <= count; i++) {
+            const c = await publicClient.readContract({
+              address: contractAddress,
+              abi: VoteChainABI.abi,
+              functionName: 'getCandidate',
+              args: [i],
+            });
 
-            const count = await voteContract.getTotalCandidates();
-            const list = [];
-            for (let i = 1; i <= count; i++) {
-              const c = await voteContract.getCandidate(i);
-              list.push({
-                id: i,
-                name: c[0],
-                slogan: c[1],
-                votes: c[2].toString(),
-                img: i === 1 ? candidate1 : i === 2 ? candidate2 : candidate3
-              });
-            }
-            setCandidates(list);
-          } else {
-            setVotingStatus('ended');
+            list.push({
+              id: i,
+              name: c[0],
+              slogan: c[1],
+              votes: c[2].toString(),
+              img: i === 1 ? candidate1 : i === 2 ? candidate2 : candidate3,
+            });
           }
-        } else {
-          alert("MetaMask not found!");
+
+          setCandidates(list);
+        } catch (err) {
+          console.error("Failed to load candidates", err);
+          alert("❌ Could not load candidates.");
         }
-      } catch (err) {
-        console.error("Initialization error:", err);
-        alert("Failed to load voting data.");
+      } else {
+        setVotingStatus('ended');
       }
     };
 
-    init();
-  }, []);
+    loadCandidates();
+  }, [publicClient, startTimeData, endTimeData]);
 
   const handleVoteClick = () => {
     if (!selected) return alert('Please select a candidate.');
@@ -83,13 +102,13 @@ const VotingPage = () => {
   };
 
   const confirmVote = async () => {
-    if (!contract || !cnic || !selected) return;
+    if (!selected || !cnic || !isConnected) return;
 
     setLoading(true);
     try {
       const now = Math.floor(Date.now() / 1000);
-      const start = await contract.startTime();
-      const end = await contract.endTime();
+      const start = Number(startTimeData);
+      const end = Number(endTimeData);
 
       if (now < start || now > end) {
         alert("❌ Voting is not allowed at this time.");
@@ -97,14 +116,18 @@ const VotingPage = () => {
         return;
       }
 
-      const tx = await contract.vote(selected.id, cnic);
-      await tx.wait();
+      await writeContractAsync({
+        address: contractAddress,
+        abi: VoteChainABI.abi,
+        functionName: 'vote',
+        args: [selected.id, cnic],
+      });
 
       alert(`✅ Voted for ${selected.name}`);
       setShowModal(false);
     } catch (err) {
       console.error(err);
-      if (err?.reason?.includes("already voted") || err?.message?.includes("already voted")) {
+      if (err?.message?.includes("already voted")) {
         alert("❌ You have already voted with this wallet or CNIC.");
       } else {
         alert("❌ Voting failed. Please try again.");
@@ -130,7 +153,7 @@ const VotingPage = () => {
               <img src={logo} alt="logo" />
               <h4>VoteChain</h4>
             </div>
-            <div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button className="btn" onClick={logout}>Logout</button>
             </div>
           </div>
@@ -138,12 +161,15 @@ const VotingPage = () => {
 
         <div className="voting-body container">
           <h2 className="vote-heading">Vote with Confidence!</h2>
+            <div className="connect-btn">
+              <ConnectButton />
+            </div>
+
 
           {votingStatus === 'loading' && <p>Checking voting status...</p>}
           {votingStatus === 'notStarted' && <p style={{ fontSize: "1.2rem", color: "red" }}>🕐 Voting has not started yet.</p>}
           {votingStatus === 'ended' && <p style={{ fontSize: "1.2rem", color: "red" }}>✅ Voting has ended. Thank you for your interest.</p>}
           {votingStatus === 'inProgress' && (
-
             <>
               <div className="row candidate-cards">
                 {candidates.length === 0 ? (
@@ -163,6 +189,8 @@ const VotingPage = () => {
                 )}
               </div>
               <button className="btn vote-btn" onClick={handleVoteClick}>Vote</button>
+            
+
             </>
           )}
         </div>

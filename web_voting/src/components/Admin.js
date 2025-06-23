@@ -117,8 +117,11 @@ const Admin = () => {
       });
       alert('✅ Candidate added!');
       setShowModal(false);
+      
     } catch {
       alert('❌ Failed to add candidate.');
+    }finally{
+      setLoading(false);
     }
   };
 
