@@ -4,7 +4,6 @@ import cors from 'cors';
 
 const app = express();
 
-// ✅ Allow all dev and mobile origins
 const allowedOrigins = [
   "http://localhost:3000",         // React dev (default)
   "https://localhost",             // React dev with HTTPS

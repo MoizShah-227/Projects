@@ -144,9 +144,10 @@ const Admin = () => {
     }
   };
 
-  const loadCandidates = async () => {
+const loadCandidates = async () => {
   if (!publicClient) return;
   setLoading(true);
+  setHistory([]); // 👈 Clear election history before loading candidates
   try {
     const countBigInt = await publicClient.readContract({
       address: contractAddress,
@@ -169,7 +170,7 @@ const Admin = () => {
         id: i,
         name: c[0],
         slogan: c[1],
-        votes: c[2].toString(), // Ensure string for rendering
+        votes: c[2].toString(),
       });
     }
 
@@ -184,9 +185,9 @@ const Admin = () => {
 
 
 const loadHistory = async () => {
-  console.log(publicClient)
   if (!publicClient) return;
   setLoading(true);
+  setCandidates([]); // 👈 Clear candidates list before loading history
   try {
     const countBigInt = await publicClient.readContract({
       address: contractAddress,

@@ -1,4 +1,3 @@
-// components/SetVotingTimeModal.jsx
 import React, { useState } from 'react';
 import './AddCandidateModal.css'; // reuse styling
 
