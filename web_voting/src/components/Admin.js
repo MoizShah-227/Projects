@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import {useAccount,useWalletClient,usePublicClient,useContractWrite,useContractRead,} from 'wagmi';
+import {
+  useAccount,
+  useWalletClient,
+  usePublicClient,
+  useReadContract,
+  useWriteContract,
+} from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import voteAbi from '../abi/VoteChain.json';
 import AddCandidateModal from '../components/AddCandidateModal';
 import SetVotingTimeModal from '../components/SetVotingTimeModal';
 import LandingAnimation from './LoadingAnimation';
-
 const contractAddress = '0xBE7DA091f727239b3edefd259195630c906c6274';
 
 const Admin = () => {
@@ -21,33 +26,18 @@ const Admin = () => {
   const { address: userAddress, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  console.log(publicClient)
 
-  const { writeAsync: addCandidateWrite } = useContractWrite({
-    address: contractAddress,
-    abi: voteAbi.abi,
-    functionName: 'addCandidate',
-  });
+  const { writeContract } = useWriteContract();
 
-  const { writeAsync: setVotingTimeWrite } = useContractWrite({
-    address: contractAddress,
-    abi: voteAbi.abi,
-    functionName: 'setVotingTime',
-  });
-
-  const { writeAsync: endVotingWrite } = useContractWrite({
-    address: contractAddress,
-    abi: voteAbi.abi,
-    functionName: 'checkAndEndVoting',
-  });
-
-  const { data: startTime } = useContractRead({
+  const { data: startTime } = useReadContract({
     address: contractAddress,
     abi: voteAbi.abi,
     functionName: 'startTime',
     watch: true,
   });
 
-  const { data: endTime } = useContractRead({
+  const { data: endTime } = useReadContract({
     address: contractAddress,
     abi: voteAbi.abi,
     functionName: 'endTime',
@@ -98,8 +88,12 @@ const Admin = () => {
         const date = nowDate.toISOString().split('T')[0];
 
         try {
-          const tx = await endVotingWrite({ args: [day, date] });
-          await tx.wait();
+          await writeContract({
+            address: contractAddress,
+            abi: voteAbi.abi,
+            functionName: 'checkAndEndVoting',
+            args: [day, date],
+          });
           setCountdown(null);
           setDisableSetTime(false);
         } catch (e) {
@@ -115,22 +109,28 @@ const Admin = () => {
   const addCandidate = async (name, slogan) => {
     setLoading(true);
     try {
-      const tx = await addCandidateWrite({ args: [name, slogan] });
-      await tx.wait();
+      await writeContract({
+        address: contractAddress,
+        abi: voteAbi.abi,
+        functionName: 'addCandidate',
+        args: [name, slogan],
+      });
       alert('✅ Candidate added!');
       setShowModal(false);
     } catch {
       alert('❌ Failed to add candidate.');
-    } finally {
-      setLoading(false);
     }
   };
 
   const setVotingTime = async (start, end) => {
     setLoading(true);
     try {
-      const tx = await setVotingTimeWrite({ args: [start, end] });
-      await tx.wait();
+      await writeContract({
+        address: contractAddress,
+        abi: voteAbi.abi,
+        functionName: 'setVotingTime',
+        args: [start, end],
+      });
       alert('✅ Voting time set!');
       setDisableSetTime(true);
       updateCountdown(end);
@@ -142,70 +142,87 @@ const Admin = () => {
   };
 
   const loadCandidates = async () => {
-    if (!publicClient) return;
-    setLoading(true);
-    try {
-      const count = await publicClient.readContract({
+  if (!publicClient) return;
+  setLoading(true);
+  try {
+    const countBigInt = await publicClient.readContract({
+      address: contractAddress,
+      abi: voteAbi.abi,
+      functionName: 'getTotalCandidates',
+    });
+
+    const count = Number(countBigInt);
+    const list = [];
+
+    for (let i = 1; i <= count; i++) {
+      const c = await publicClient.readContract({
         address: contractAddress,
         abi: voteAbi.abi,
-        functionName: 'getTotalCandidates',
+        functionName: 'getCandidate',
+        args: [i],
       });
 
-      const list = [];
-      for (let i = 1; i <= count; i++) {
-        const c = await publicClient.readContract({
-          address: contractAddress,
-          abi: voteAbi.abi,
-          functionName: 'getCandidate',
-          args: [i],
-        });
-        list.push({ id: i, name: c[0], slogan: c[1], votes: c[2] });
-      }
-      setCandidates(list);
-    } catch {
-      alert('❌ Error loading candidates.');
-    } finally {
-      setLoading(false);
+      list.push({
+        id: i,
+        name: c[0],
+        slogan: c[1],
+        votes: c[2].toString(), // Ensure string for rendering
+      });
     }
-  };
 
-  const loadHistory = async () => {
-    if (!publicClient) return;
-    setLoading(true);
-    try {
-      const count = await publicClient.readContract({
+    setCandidates(list);
+  } catch (err) {
+    console.error("Load candidate error:", err);
+    alert('❌ Error loading candidates.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+const loadHistory = async () => {
+  console.log(publicClient)
+  if (!publicClient) return;
+  setLoading(true);
+  try {
+    const countBigInt = await publicClient.readContract({
+      address: contractAddress,
+      abi: voteAbi.abi,
+      functionName: 'getElectionHistoryCount',
+    });
+
+    const count = Number(countBigInt);
+    const all = [];
+
+    for (let i = 0; i < count; i++) {
+      const r = await publicClient.readContract({
         address: contractAddress,
         abi: voteAbi.abi,
-        functionName: 'getElectionHistoryCount',
+        functionName: 'getElectionResult',
+        args: [i],
       });
 
-      const all = [];
-      for (let i = 0; i < count; i++) {
-        const r = await publicClient.readContract({
-          address: contractAddress,
-          abi: voteAbi.abi,
-          functionName: 'getElectionResult',
-          args: [i],
-        });
-        all.push({
-          index: i + 1,
-          start: new Date(r[0] * 1000).toLocaleString(),
-          end: new Date(r[1] * 1000).toLocaleString(),
-          day: r[2],
-          date: r[3],
-          totalVotes: r[4].toString(),
-          winnerId: r[5].toString(),
-          winnerName: r[6],
-          winnerVotes: r[7].toString(),
-        });
-      }
-      setHistory(all);
-    } catch {
-      alert('❌ Error loading election history.');
-    } finally {
-      setLoading(false);
+      all.push({
+        index: i + 1,
+        start: new Date(Number(r[0]) * 1000).toLocaleString(),
+        end: new Date(Number(r[1]) * 1000).toLocaleString(),
+        day: r[2],
+        date: r[3],
+        totalVotes: r[4].toString(),
+        winnerId: r[5].toString(),
+        winnerName: r[6],
+        winnerVotes: r[7].toString(),
+      });
     }
-  };
+
+    setHistory(all);
+  } catch (err) {
+    console.error("Load history error:", err);
+    alert('❌ Error loading election history.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const formatCountdown = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -215,17 +232,17 @@ const Admin = () => {
   };
 
   return (
-    <>
+    <div className="admin">
       {loading && <LandingAnimation />}
 
-      <div style={{ padding: '2rem', fontWeight: 400 }}>
+      <div style={{ padding: '2rem', fontWeight: 500 }}>
         <ConnectButton />
         <h1>🗳️ VoteChain dApp</h1>
 
         {userAddress && <p>Connected as: {userAddress}</p>}
 
         {countdown > 0 && (
-          <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2c3e50' }}>
+          <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#07090a'  }}>
             ⏳ Voting ends in: {formatCountdown(countdown)}
           </p>
         )}
@@ -268,7 +285,7 @@ const Admin = () => {
         onHide={() => setShowTimeModal(false)}
         onSubmit={setVotingTime}
       />
-    </>
+    </div>
   );
 };
 
