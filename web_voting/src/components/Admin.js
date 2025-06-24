@@ -26,7 +26,7 @@ const Admin = () => {
   const { address: userAddress, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
-  console.log(publicClient)
+  // console.log(publicClient)
 
   const { writeContract } = useWriteContract();
 
