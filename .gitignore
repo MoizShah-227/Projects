@@ -1,4 +1,19 @@
-node_modules
-├── node_modules
+# Ignore node modules
+node_modules/
+
+# Ignore environment files
 .env
-build
+.env.local
+.env.*.local
+
+# Ignore build output
+build/
+dist/
+
+# Optional: Ignore logs
+logs/
+*.log
+
+# Optional: Ignore OS/system files
+.DS_Store
+Thumbs.db
