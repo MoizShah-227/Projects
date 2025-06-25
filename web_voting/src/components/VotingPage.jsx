@@ -40,6 +40,34 @@ const VotingPage = () => {
     watch: true,
   });
 
+  useEffect(() => {
+  let touchStartY = 0;
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      touchStartY = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const swipeDistance = touchEndY - touchStartY;
+
+    // Trigger refresh if swipe is downward more than 70px
+    if (swipeDistance > 70 && window.scrollY === 0) {
+      window.location.reload();
+    }
+  };
+
+  window.addEventListener('touchstart', handleTouchStart);
+  window.addEventListener('touchend', handleTouchEnd);
+
+  return () => {
+    window.removeEventListener('touchstart', handleTouchStart);
+    window.removeEventListener('touchend', handleTouchEnd);
+  };
+}, []);
+
   // Load CNIC from localStorage and check voting status
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -134,6 +162,7 @@ const VotingPage = () => {
       }
     } finally {
       setLoading(false);
+      
     }
   };
 

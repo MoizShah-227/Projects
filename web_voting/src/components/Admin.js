@@ -5,6 +5,7 @@ import {
   usePublicClient,
   useReadContract,
   useWriteContract,
+  useWaitForTransactionReceipt,
 } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import voteAbi from '../abi/VoteChain.json';
@@ -49,6 +50,34 @@ const Admin = () => {
     const remaining = endTime - now;
     setCountdown(remaining > 0 ? remaining : null);
   };
+
+  useEffect(() => {
+  let touchStartY = 0;
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      touchStartY = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const swipeDistance = touchEndY - touchStartY;
+
+    // Trigger refresh if swipe is downward more than 70px
+    if (swipeDistance > 70 && window.scrollY === 0) {
+      window.location.reload();
+    }
+  };
+
+  window.addEventListener('touchstart', handleTouchStart);
+  window.addEventListener('touchend', handleTouchEnd);
+
+  return () => {
+    window.removeEventListener('touchstart', handleTouchStart);
+    window.removeEventListener('touchend', handleTouchEnd);
+  };
+}, []);
 
   useEffect(() => {
     if (startTime && endTime) {
@@ -125,7 +154,7 @@ const Admin = () => {
     }
   };
 
-  const setVotingTime = async (start, end) => {
+const setVotingTime = async (start, end) => {
     setLoading(true);
     try {
       await writeContract({
@@ -143,7 +172,7 @@ const Admin = () => {
       setLoading(false);
     }
   };
-
+  
 const loadCandidates = async () => {
   if (!publicClient) return;
   setLoading(true);
