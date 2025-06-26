@@ -12,9 +12,9 @@ import voteAbi from '../abi/VoteChain.json';
 import AddCandidateModal from '../components/AddCandidateModal';
 import SetVotingTimeModal from '../components/SetVotingTimeModal';
 import LandingAnimation from './LoadingAnimation';
-const contractAddress = '0xBE7DA091f727239b3edefd259195630c906c6274';
 
 const Admin = () => {
+  const contractAddress = '0x74676c425f16c630ceA325CDB1386042Ca39Cc96';
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [candidates, setCandidates] = useState([]);
@@ -23,15 +23,26 @@ const Admin = () => {
   const [disableSetTime, setDisableSetTime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
+  const [electionName, setElectionName] = useState('');
 
   const { address: userAddress, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   // console.log(publicClient)
 
+
   const { writeContract } = useWriteContract();
 
-  const { data: startTime } = useReadContract({
+
+
+  const { data: currentElectionName } = useReadContract({
+    address: contractAddress,
+    abi: voteAbi.abi,
+    functionName: 'electionName',
+    watch: true,
+  });
+
+    const { data: startTime } = useReadContract({
     address: contractAddress,
     abi: voteAbi.abi,
     functionName: 'startTime',
@@ -50,6 +61,12 @@ const Admin = () => {
     const remaining = endTime - now;
     setCountdown(remaining > 0 ? remaining : null);
   };
+
+  useEffect(() => {
+  if (currentElectionName !== undefined) {
+    setElectionName(currentElectionName);
+  }
+}, [currentElectionName]);
 
   useEffect(() => {
   let touchStartY = 0;
@@ -135,43 +152,44 @@ const Admin = () => {
     return () => clearInterval(interval);
   }, [publicClient, hasEnded, endTime, isConnected]);
 
-  const addCandidate = async (name, slogan) => {
+  const addCandidate = async (name, slogan,gender) => {
     setLoading(true);
     try {
       await writeContract({
         address: contractAddress,
         abi: voteAbi.abi,
         functionName: 'addCandidate',
-        args: [name, slogan],
+        args: [name, slogan,gender],
       });
       alert('✅ Candidate added!');
       setShowModal(false);
       
     } catch {
       alert('❌ Failed to add candidate.');
-    }finally{
+    }finally{ 
       setLoading(false);
     }
   };
 
-const setVotingTime = async (start, end) => {
-    setLoading(true);
-    try {
-      await writeContract({
-        address: contractAddress,
-        abi: voteAbi.abi,
-        functionName: 'setVotingTime',
-        args: [start, end],
-      });
-      alert('✅ Voting time set!');
-      setDisableSetTime(true);
-      updateCountdown(end);
-    } catch {
-      alert('❌ Failed to set voting time.');
-    } finally {
-      setLoading(false);
-    }
-  };
+const setVotingTime = async (start, end, name) => {
+  setLoading(true);
+  try {
+    await writeContract({
+      address: contractAddress,
+      abi: voteAbi.abi,
+      functionName: 'setVotingTime',
+      args: [start, end, name],
+    });
+    alert('✅ Voting time set!');
+    setDisableSetTime(true);
+    updateCountdown(end);
+    setElectionName(name);
+  } catch {
+    alert('❌ Failed to set voting time.');
+  } finally {
+    setLoading(false);
+  }
+};
   
 const loadCandidates = async () => {
   if (!publicClient) return;
@@ -199,10 +217,11 @@ const loadCandidates = async () => {
         id: i,
         name: c[0],
         slogan: c[1],
-        votes: c[2].toString(),
+        gender: c[2],                   
+        votes: c[3],         
       });
     }
-
+    console.log(list);
     setCandidates(list);
   } catch (err) {
     console.error("Load candidate error:", err);
@@ -245,9 +264,10 @@ const loadHistory = async () => {
         winnerId: r[5].toString(),
         winnerName: r[6],
         winnerVotes: r[7].toString(),
+        electionName:r[8]
       });
     }
-
+    console.log(all);
     setHistory(all);
   } catch (err) {
     console.error("Load history error:", err);
@@ -272,7 +292,11 @@ const loadHistory = async () => {
         <a href='/'>Back to home</a>
         <ConnectButton />
         <h1>🗳️ VoteChain dApp</h1>
-
+        {electionName && (
+          <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f5132' }}>
+            🗳️ Current Election: <strong>{electionName}</strong>
+          </p>
+        )}
         {userAddress && <p>Connected as: {userAddress} </p>}
         {countdown > 0 && (
           <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#07090a'  }}>
@@ -289,17 +313,22 @@ const loadHistory = async () => {
         
         <hr />
         {candidates.map((c) => (
-          <div key={c.id} style={{ border: '1px solid #ccc', padding: '1rem', margin: '1rem 0' }}>
-            <h3>#{c.id} - {c.name}</h3>
-            <p>{c.slogan}</p>
-            <strong>Votes: {c.votes.toString()}</strong>
-          </div>
-        ))}
+  <div
+    key={c.id}
+    style={{border: '1px solid #ccc',padding: '1rem',margin: '1rem 0',borderRadius: '8px',backgroundColor: '#f9f9f9', }}>
+    <h3>
+      #{c.id} - {c.name}
+    </h3>
+    <p><strong>Slogan:</strong> {c.slogan}</p>
+    <p><strong>Gender:</strong> {c.gender}</p>
+    <p><strong>Votes:</strong> {c.votes}</p>
+  </div>
+))}
 
         <hr />
         {history.map((e) => (
           <div key={e.index} style={{ border: '1px solid #ccc', margin: '1rem', padding: '1rem' }}>
-            <h3>📅 Election #{e.index} ({e.day}, {e.date})</h3>
+            <h3>📅 {e.electionName} ({e.day}, {e.date})</h3>
             <p>🕒 Start: {e.start}</p>
             <p>🕓 End: {e.end}</p>
             <p>🧾 Total Votes: {e.totalVotes}</p>

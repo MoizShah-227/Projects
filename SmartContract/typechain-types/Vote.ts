@@ -33,6 +33,7 @@ export declare namespace Vote {
     winnerId: BigNumberish;
     winnerName: string;
     winnerVotes: BigNumberish;
+    electionName: string;
   };
 
   export type ElectionResultStructOutput = [
@@ -43,7 +44,8 @@ export declare namespace Vote {
     totalVotes: bigint,
     winnerId: bigint,
     winnerName: string,
-    winnerVotes: bigint
+    winnerVotes: bigint,
+    electionName: string
   ] & {
     startTime: bigint;
     endTime: bigint;
@@ -53,6 +55,7 @@ export declare namespace Vote {
     winnerId: bigint;
     winnerName: string;
     winnerVotes: bigint;
+    electionName: string;
   };
 }
 
@@ -64,6 +67,7 @@ export interface VoteInterface extends Interface {
       | "candidateCount"
       | "candidates"
       | "checkAndEndVoting"
+      | "electionName"
       | "endTime"
       | "getCandidate"
       | "getElectionHistoryCount"
@@ -84,7 +88,7 @@ export interface VoteInterface extends Interface {
 
   encodeFunctionData(
     functionFragment: "addCandidate",
-    values: [string, string]
+    values: [string, string, string]
   ): string;
   encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(
@@ -98,6 +102,10 @@ export interface VoteInterface extends Interface {
   encodeFunctionData(
     functionFragment: "checkAndEndVoting",
     values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "electionName",
+    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "endTime", values?: undefined): string;
   encodeFunctionData(
@@ -122,7 +130,7 @@ export interface VoteInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setVotingTime",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, string]
   ): string;
   encodeFunctionData(functionFragment: "startTime", values?: undefined): string;
   encodeFunctionData(
@@ -159,6 +167,10 @@ export interface VoteInterface extends Interface {
   decodeFunctionResult(functionFragment: "candidates", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "checkAndEndVoting",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "electionName",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "endTime", data: BytesLike): Result;
@@ -270,7 +282,7 @@ export interface Vote extends BaseContract {
   ): Promise<this>;
 
   addCandidate: TypedContractMethod<
-    [_name: string, _slogan: string],
+    [_name: string, _slogan: string, _gender: string],
     [void],
     "nonpayable"
   >;
@@ -282,10 +294,11 @@ export interface Vote extends BaseContract {
   candidates: TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [bigint, string, string, bigint] & {
+      [bigint, string, string, string, bigint] & {
         id: bigint;
         name: string;
         slogan: string;
+        gender: string;
         voteCount: bigint;
       }
     ],
@@ -298,11 +311,13 @@ export interface Vote extends BaseContract {
     "nonpayable"
   >;
 
+  electionName: TypedContractMethod<[], [string], "view">;
+
   endTime: TypedContractMethod<[], [bigint], "view">;
 
   getCandidate: TypedContractMethod<
     [_id: BigNumberish],
-    [[string, string, bigint]],
+    [[string, string, string, bigint]],
     "view"
   >;
 
@@ -310,7 +325,7 @@ export interface Vote extends BaseContract {
 
   getElectionResult: TypedContractMethod<
     [index: BigNumberish],
-    [[bigint, bigint, string, string, bigint, bigint, string, bigint]],
+    [[bigint, bigint, string, string, bigint, bigint, string, bigint, string]],
     "view"
   >;
 
@@ -319,7 +334,17 @@ export interface Vote extends BaseContract {
   history: TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [bigint, bigint, string, string, bigint, bigint, string, bigint] & {
+      [
+        bigint,
+        bigint,
+        string,
+        string,
+        bigint,
+        bigint,
+        string,
+        bigint,
+        string
+      ] & {
         startTime: bigint;
         endTime: bigint;
         day: string;
@@ -328,13 +353,14 @@ export interface Vote extends BaseContract {
         winnerId: bigint;
         winnerName: string;
         winnerVotes: bigint;
+        electionName: string;
       }
     ],
     "view"
   >;
 
   setVotingTime: TypedContractMethod<
-    [_startTime: BigNumberish, _endTime: BigNumberish],
+    [_startTime: BigNumberish, _endTime: BigNumberish, _electionName: string],
     [void],
     "nonpayable"
   >;
@@ -368,7 +394,7 @@ export interface Vote extends BaseContract {
   getFunction(
     nameOrSignature: "addCandidate"
   ): TypedContractMethod<
-    [_name: string, _slogan: string],
+    [_name: string, _slogan: string, _gender: string],
     [void],
     "nonpayable"
   >;
@@ -383,10 +409,11 @@ export interface Vote extends BaseContract {
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [bigint, string, string, bigint] & {
+      [bigint, string, string, string, bigint] & {
         id: bigint;
         name: string;
         slogan: string;
+        gender: string;
         voteCount: bigint;
       }
     ],
@@ -396,13 +423,16 @@ export interface Vote extends BaseContract {
     nameOrSignature: "checkAndEndVoting"
   ): TypedContractMethod<[_day: string, _date: string], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "electionName"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "endTime"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getCandidate"
   ): TypedContractMethod<
     [_id: BigNumberish],
-    [[string, string, bigint]],
+    [[string, string, string, bigint]],
     "view"
   >;
   getFunction(
@@ -412,7 +442,7 @@ export interface Vote extends BaseContract {
     nameOrSignature: "getElectionResult"
   ): TypedContractMethod<
     [index: BigNumberish],
-    [[bigint, bigint, string, string, bigint, bigint, string, bigint]],
+    [[bigint, bigint, string, string, bigint, bigint, string, bigint, string]],
     "view"
   >;
   getFunction(
@@ -423,7 +453,17 @@ export interface Vote extends BaseContract {
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [bigint, bigint, string, string, bigint, bigint, string, bigint] & {
+      [
+        bigint,
+        bigint,
+        string,
+        string,
+        bigint,
+        bigint,
+        string,
+        bigint,
+        string
+      ] & {
         startTime: bigint;
         endTime: bigint;
         day: string;
@@ -432,6 +472,7 @@ export interface Vote extends BaseContract {
         winnerId: bigint;
         winnerName: string;
         winnerVotes: bigint;
+        electionName: string;
       }
     ],
     "view"
@@ -439,7 +480,7 @@ export interface Vote extends BaseContract {
   getFunction(
     nameOrSignature: "setVotingTime"
   ): TypedContractMethod<
-    [_startTime: BigNumberish, _endTime: BigNumberish],
+    [_startTime: BigNumberish, _endTime: BigNumberish, _electionName: string],
     [void],
     "nonpayable"
   >;

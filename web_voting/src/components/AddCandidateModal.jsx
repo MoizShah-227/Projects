@@ -1,15 +1,21 @@
-// components/AddCandidateModal.jsx
 import React, { useState } from 'react';
-import './AddCandidateModal.css'; // We'll create this CSS next
+import './AddCandidateModal.css';
 
 const AddCandidateModal = ({ show, onHide, onSubmit }) => {
   const [name, setName] = useState('');
   const [slogan, setSlogan] = useState('');
+  const [gender, setGender] = useState('');
 
   const handleSubmit = () => {
-    onSubmit(name, slogan);
+    if (!name || !slogan || !gender) {
+      alert("Please fill in all fields including gender.");
+      return;
+    }
+
+    onSubmit(name, slogan, gender);
     setName('');
     setSlogan('');
+    setGender('');
     onHide(); // Close modal after submission
   };
 
@@ -35,6 +41,14 @@ const AddCandidateModal = ({ show, onHide, onSubmit }) => {
           value={slogan}
           onChange={(e) => setSlogan(e.target.value)}
         />
+
+        <label>Gender</label>
+        <select value={gender} onChange={(e) => setGender(e.target.value)}>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
 
         <div className="modal-actions">
           <button className="cancel-btn" onClick={onHide}>Cancel</button>

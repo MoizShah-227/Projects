@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import logo from '../img/logo 1.png';
 import side from '../img/Side Image.svg';
-import './loginpage.css';
+import './registerpage.css';
 import { useNavigate } from 'react-router-dom';
 import apirequest from '../lib/ApiRequest';
 import LandingAnimation from './LoadingAnimation'; // 👈 Import the loader
@@ -15,6 +15,9 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [studentClass, setStudentClass] = useState('');
+  const [section, setSection] = useState('');
+  const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(false); // 👈 loading state
 
   const formatDateToMMDDYYYY = (inputDate) => {
@@ -26,7 +29,7 @@ const RegisterPage = () => {
   };
 
   const handleRegister = async () => {
-    if (!name || !cnic || !dob || !phone || !email || !password) {
+    if (!name || !cnic || !dob || !phone || !email || !password || !studentClass || !section || !gender) {
       alert('⚠️ All fields are required!');
       return;
     }
@@ -43,6 +46,9 @@ const RegisterPage = () => {
         phone,
         email,
         password,
+        studentClass,
+        section,
+        gender,
       });
 
       alert('✅ Registration successful!');
@@ -59,7 +65,7 @@ const RegisterPage = () => {
     <>
       {loading && <LandingAnimation />} {/* 👈 Show loader */}
 
-      <div className='login-page'>
+      <div className='register'>
         <nav className='nav'>
           <div>
             <img src={logo} alt="logo" />
@@ -111,6 +117,32 @@ const RegisterPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
+                {/* New Fields */}
+                <input
+                  type="text"
+                  placeholder='BSCS-1'
+                  value={studentClass}
+                  onChange={(e) => setStudentClass(e.target.value)}
+                />
+                  <select
+                    value={section}
+                    onChange={(e) => setSection(e.target.value)}
+                  >
+                    <option value="">Select Section</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+
                 <button className='btn' onClick={handleRegister} disabled={loading}>
                   {loading ? 'Registering...' : 'Register'}
                 </button>
